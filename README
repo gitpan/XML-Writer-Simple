@@ -1,0 +1,23 @@
+XML-Writer-Simple
+=================
+
+XML-Writer-Simple is a simple Perl module to write XML. It takes some
+ideas from CGI and applies them for the XML World.
+
+
+INSTALLATION
+
+To install this module, run the following commands:
+
+    perl Makefile.PL
+    make
+    make test
+    make install
+
+
+COPYRIGHT AND LICENCE
+
+Copyright (C) 2006 Alberto Simoes
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.

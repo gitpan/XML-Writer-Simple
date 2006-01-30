@@ -1,0 +1,13 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         XML-Writer-Simple
+version:      0.01
+version_from: lib/XML/Writer/Simple.pm
+installdirs:  site
+requires:
+    Test::More:                    0
+    XML::DT:                       0.42
+    XML::DTDParser:                2.01
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.17

@@ -1,0 +1,217 @@
+package XML::Writer::Simple;
+
+use warnings;
+use strict;
+use Exporter ();
+use vars qw/@ISA @EXPORT/;
+use XML::DT;
+use XML::DTDParser qw/ParseDTDFile/;
+
+=head1 NAME
+
+XML::Writer::Simple - Create XML files easily!
+
+=head1 VERSION
+
+Version 0.01
+
+=cut
+
+our $VERSION = '0.01';
+@ISA = qw/Exporter/;
+@EXPORT = (qw/powertag/);
+our %PTAGS = ();
+our $MODULENAME = "XML::Writer::Simple";
+
+=head1 SYNOPSIS
+
+    use XML::Writer::Simple dtd => "file.dtd";
+
+    print para("foo",b("bar"),"zbr");
+
+=head1 USAGE
+
+This module takes some ideas from CGI to make easier the life for
+those who need to generated XML code. You can use the module in three
+flavours (or combine them):
+
+=over 4
+
+=item tags
+
+When importing the module you can specify the tags you will be using:
+
+  use XML::Writer::Simple tags => [qw/p b i tt/];
+
+  print p("Hey, ",b("you"),"! ", i("Yes ", b("you")));
+
+that will generate
+
+ <p>Hey <b>you</b>! <i>Yes <b>you</b></i></p>
+
+=item dtd
+
+You can supply a DTD, that will be analyzed, and the tags used:
+
+  use XML::Writer::Simple dtd => "tmx.dtd";
+
+  print tu(seg("foo"),seg("bar"));
+
+=item xml
+
+You can supply an XML (or a reference to a list of XML files). They
+will be parsed, and the tags used:
+
+  use XML::Writer::Simple xml => "foo.xml";
+
+  print foo("bar");
+
+=back
+
+=head1 EXPORT
+
+This module export one function for each element at the dtd or xml
+file you are using. See below for details.
+
+=head1 FUNCTIONS
+
+=head2 import
+
+Used when you 'use' the module, should not be used directly.
+
+=head2 powertag
+
+Used to specify a powertag. For instance:
+
+  powertag("ul","li");
+
+  ul_li([qw/foo bar zbr ugh/]);
+
+will generate
+
+  <ul>
+   <li>foo</li>
+   <li>bar</li>
+   <li>zbr</li>
+   <li>ugh</li>
+  </ul>
+
+You can also supply this information when loading the module, with
+
+  use XML::Writer::Simple powertags=>["ul_li","ol_li"];
+
+Powertags support three level tags as well:
+
+  use XML::Writer::Simple powertags=>["table_tr_td"];
+
+  print table_tr_td(['a','b','c'],['d','e','f']);
+
+=cut
+
+sub powertag {
+  my $nfunc = join("_", @_);
+  $PTAGS{$nfunc}=[@_];
+  push @EXPORT, $nfunc;
+  XML::Writer::Simple->export_to_level(1, $MODULENAME, $nfunc);
+}
+
+sub _xml_from {
+  my ($tag, $attrs, @body) = @_;
+  return (ref($body[0]) eq "ARRAY")?
+    join("", map{ toxml($tag, $attrs, $_) } @{$body[0]})
+      :toxml($tag, $attrs, join("", @body));
+}
+
+sub _go_down {
+  my ($tags, @values) = @_;
+  my $tag = shift @$tags;
+  if (@$tags) {
+    join("",
+         map { _xml_from($tag,{},_go_down([@$tags],@$_)) } ### REALLY NEED TO COPY
+         @values)
+  } else {
+    join("",
+         map { _xml_from($tag,{},$_) } @values)
+  }
+}
+
+sub AUTOLOAD {
+  my $attrs = {};
+  my $tag = our $AUTOLOAD;
+
+  $tag =~ s!${MODULENAME}::!!;
+  $attrs = shift if ref($_[0]) eq "HASH";
+
+  if (exists($PTAGS{$tag})) {
+    my @tags = @{$PTAGS{$tag}};
+    my $toptag = shift @tags;
+    return _xml_from($toptag, $attrs,
+                     _go_down(\@tags, @_));
+  } else {
+    for (keys %$attrs) {
+      if (m!^-!) {
+        $attrs->{$'}=$attrs->{$_};
+        delete($attrs->{$_});
+      }
+    }
+    return _xml_from($tag,$attrs,@_);
+  }
+}
+
+sub import {
+  my $class = shift;
+  my %opts  = @_;
+
+  if (exists($opts{tags})) {
+    if (ref($opts{tags}) eq "ARRAY") {
+      push @EXPORT, @{$opts{tags}}
+    }
+  }
+
+  if (exists($opts{xml})) {
+    my @xmls = (ref($opts{xml}) eq "ARRAY")?@{$opts{xml}}:($opts{xml});
+    my $tags;
+    for my $xml (@xmls) {
+      dt($xml, -default => sub { $tags->{$q}++ });
+    }
+    push @EXPORT, keys %$tags;
+  }
+
+  if (exists($opts{dtd})) {
+    my $DTD = ParseDTDFile($opts{dtd});
+    push @EXPORT, keys %$DTD;
+  }
+
+  if (exists($opts{powertags})) {
+    my @ptags = @{$opts{powertags}};
+    @PTAGS{@ptags} = map { [split/_/] } @ptags;
+    push @EXPORT, @ptags;
+  }
+
+  XML::Writer::Simple->export_to_level(1, $class, @EXPORT);
+}
+
+=head1 AUTHOR
+
+Alberto Simoes, C<< <ambs@cpan.org> >>
+
+=head1 BUGS
+
+Please report any bugs or feature requests to
+C<bug-xml-writer-simple@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=XML-Writer-Simple>.
+I will be notified, and then you'll automatically be notified of progress on
+your bug as I make changes.
+
+=head1 ACKNOWLEDGEMENTS
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2006 Alberto Simoes, all rights reserved.
+
+This program is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
+
+1; # End of XML::Writer::Simple
