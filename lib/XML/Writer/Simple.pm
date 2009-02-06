@@ -13,13 +13,13 @@ XML::Writer::Simple - Create XML files easily!
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 @ISA = qw/Exporter/;
-@EXPORT = (qw/powertag/);
+@EXPORT = (qw/powertag xml_header/);
 our %PTAGS = ();
 our $MODULENAME = "XML::Writer::Simple";
 
@@ -27,6 +27,7 @@ our $MODULENAME = "XML::Writer::Simple";
 
     use XML::Writer::Simple dtd => "file.dtd";
 
+		print xml_header(encoding => 'iso-8859-1');
     print para("foo",b("bar"),"zbr");
 
 =head1 USAGE
@@ -79,6 +80,16 @@ file you are using. See below for details.
 
 Used when you 'use' the module, should not be used directly.
 
+=head2 xml_header
+
+This function returns the xml header string, without encoding
+definition, with a trailing new line. Default XML encoding should
+be UTF-8, by the way.
+
+You can force an encoding passing it as argument:
+
+  print xml_header(encoding=>'iso-8859-1');
+
 =head2 powertag
 
 Used to specify a powertag. For instance:
@@ -108,6 +119,13 @@ Powertags support three level tags as well:
 
 =cut
 
+sub xml_header {
+	my %ops = @_;
+	my $encoding = "";
+	$encoding =" encoding=\"$ops{encoding}\"" if exists $ops{encoding};
+	return "<?xml version=\"1.0\"$encoding?>\n";
+}
+
 sub powertag {
   my $nfunc = join("_", @_);
   $PTAGS{$nfunc}=[@_];
@@ -122,12 +140,29 @@ sub _xml_from {
       :toxml($tag, $attrs, join("", @body));
 }
 
+sub _clean_attrs {
+  my $attrs = shift;
+  for (keys %$attrs) {
+    if (m!^-!) {
+      $attrs->{$'}=$attrs->{$_};
+      delete($attrs->{$_});
+    }
+  }
+  return $attrs;
+}
+
 sub _go_down {
   my ($tags, @values) = @_;
   my $tag = shift @$tags;
+
   if (@$tags) {
     join("",
-         map { _xml_from($tag,{},_go_down([@$tags],@$_)) } ### REALLY NEED TO COPY
+         map {
+           my $attrs = {};
+           if (ref($_->[0]) eq 'HASH') {
+             $attrs = _clean_attrs(shift @$_);
+           }
+           _xml_from($tag,$attrs,_go_down([@$tags],@$_)) } ### REALLY NEED TO COPY
          @values)
   } else {
     join("",
@@ -142,18 +177,14 @@ sub AUTOLOAD {
   $tag =~ s!${MODULENAME}::!!;
   $attrs = shift if ref($_[0]) eq "HASH";
 
+  $attrs = _clean_attrs($attrs);
+
   if (exists($PTAGS{$tag})) {
     my @tags = @{$PTAGS{$tag}};
     my $toptag = shift @tags;
     return _xml_from($toptag, $attrs,
                      _go_down(\@tags, @_));
   } else {
-    for (keys %$attrs) {
-      if (m!^-!) {
-        $attrs->{$'}=$attrs->{$_};
-        delete($attrs->{$_});
-      }
-    }
     return _xml_from($tag,$attrs,@_);
   }
 }

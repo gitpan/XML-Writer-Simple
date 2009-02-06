@@ -1,7 +1,11 @@
 #!/usr/bin/perl 
 
-use Test::More tests => 8;
+use Test::More tests => 10;
 use XML::Writer::Simple tags => [qw/a b c d e/];
+
+like(xml_header, qr/^<\?xml version="1\.0"\?>\n$/);
+
+like(xml_header(encoding=>'iso-8859-1'), qr/^<\?xml version="1\.0" encoding="iso-8859-1"\?>\n$/);
 
 is(a(b(c(d(e('f'))))), "<a><b><c><d><e>f</e></d></c></b></a>");
 
@@ -18,5 +22,6 @@ is(a({-foo=>'bar'},'x'), "<a foo=\"bar\">x</a>");
 is(a({foo=>'bar'},'x'), "<a foo=\"bar\">x</a>");
 
 is(a(), "<a/>");
+
 
 
