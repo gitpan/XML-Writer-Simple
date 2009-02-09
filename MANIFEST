@@ -11,5 +11,6 @@ t/02-dtd.t
 t/03-xml.t
 t/03-xml.xml
 t/04-power.t
+t/05-partial.t
 t/pod-coverage.t
 t/pod.t

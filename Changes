@@ -1,5 +1,8 @@
 Revision history for XML-Writer-Simple
 
+0.03    2009, 9 February
+		- Added support to partial tags construction.
+
 0.02    2009, 6 February
         - About three years after the first release, here comes a new
           one with new features. Would love to know if someone is using

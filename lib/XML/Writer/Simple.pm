@@ -11,13 +11,9 @@ use XML::DTDParser qw/ParseDTDFile/;
 
 XML::Writer::Simple - Create XML files easily!
 
-=head1 VERSION
-
-Version 0.02
-
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 @ISA = qw/Exporter/;
 @EXPORT = (qw/powertag xml_header/);
 our %PTAGS = ();
@@ -66,6 +62,17 @@ will be parsed, and the tags used:
   use XML::Writer::Simple xml => "foo.xml";
 
   print foo("bar");
+
+=item partial
+
+You can supply an 'partial' key, to generate prototypes for partial tags
+construction. For instance:
+
+  use XML::Writer::Simple tags => qw/foo bar/, partial => 1;
+
+  print start_foo;
+  print ...
+  print end_foo;
 
 =back
 
@@ -175,8 +182,8 @@ sub AUTOLOAD {
   my $tag = our $AUTOLOAD;
 
   $tag =~ s!${MODULENAME}::!!;
-  $attrs = shift if ref($_[0]) eq "HASH";
 
+  $attrs = shift if ref($_[0]) eq "HASH";
   $attrs = _clean_attrs($attrs);
 
   if (exists($PTAGS{$tag})) {
@@ -184,18 +191,49 @@ sub AUTOLOAD {
     my $toptag = shift @tags;
     return _xml_from($toptag, $attrs,
                      _go_down(\@tags, @_));
-  } else {
-    return _xml_from($tag,$attrs,@_);
   }
+	else {
+		if ($tag =~ m/^end_(.*)$/) {
+			return _close_tag($1);
+		}
+		elsif ($tag =~ m/^start_(.*)$/) {
+			return _start_tag($1, $attrs);
+		}
+		else {	
+	    return _xml_from($tag,$attrs,@_);
+		}
+  }
+}
+
+sub _start_tag {
+	my ($tag,$attr) = @_;
+	$attr = join(" ",map { "$_=\"$attr->{$_}\""} keys %$attr);
+	if ($attr) {
+		return "<$tag $attr>"
+	} else {
+		return "<$tag>"
+	}
+}
+
+sub _close_tag {
+	my $tag = shift;
+	return "</$tag>";
 }
 
 sub import {
   my $class = shift;
   my %opts  = @_;
 
+	my $partial = 0;
+	$partial = 1 if exists $opts{partial};
+
   if (exists($opts{tags})) {
     if (ref($opts{tags}) eq "ARRAY") {
-      push @EXPORT, @{$opts{tags}}
+      push @EXPORT, @{$opts{tags}};
+			if ($partial) {
+				push @EXPORT, map { "start_$_" } @{$opts{tags}};
+				push @EXPORT, map { "end_$_"   } @{$opts{tags}};
+			}
     }
   }
 
@@ -206,11 +244,19 @@ sub import {
       dt($xml, -default => sub { $tags->{$q}++ });
     }
     push @EXPORT, keys %$tags;
+		if ($partial) {
+			push @EXPORT, map { "start_$_" } keys %$tags;
+			push @EXPORT, map { "end_$_"   } keys %$tags;
+		}
   }
 
   if (exists($opts{dtd})) {
     my $DTD = ParseDTDFile($opts{dtd});
     push @EXPORT, keys %$DTD;
+		if ($partial) {
+			push @EXPORT, map { "start_$_" } keys %$DTD;
+			push @EXPORT, map { "end_$_"   } keys %$DTD;
+		}
   }
 
   if (exists($opts{powertags})) {
