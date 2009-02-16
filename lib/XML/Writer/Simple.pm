@@ -13,7 +13,7 @@ XML::Writer::Simple - Create XML files easily!
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 @ISA = qw/Exporter/;
 @EXPORT = (qw/powertag xml_header/);
 our %PTAGS = ();
@@ -143,8 +143,8 @@ sub powertag {
 sub _xml_from {
   my ($tag, $attrs, @body) = @_;
   return (ref($body[0]) eq "ARRAY")?
-    join("", map{ toxml($tag, $attrs, $_) } @{$body[0]})
-      :toxml($tag, $attrs, join("", @body));
+    join("", map{ _toxml($tag, $attrs, $_) } @{$body[0]})
+      :_toxml($tag, $attrs, join("", @body));
 }
 
 sub _clean_attrs {
@@ -156,6 +156,16 @@ sub _clean_attrs {
     }
   }
   return $attrs;
+}
+
+sub _toxml {
+	my ($tag,$attr,$contents) = @_;
+	if ($contents) {
+		return _start_tag($tag,$attr) . $contents . _close_tag($tag);		
+	}
+	else {
+		return _empty_tag($tag,$attr);
+	}
 }
 
 sub _go_down {
@@ -194,10 +204,10 @@ sub AUTOLOAD {
   }
 	else {
 		if ($tag =~ m/^end_(.*)$/) {
-			return _close_tag($1);
+			return _close_tag($1)."\n";
 		}
 		elsif ($tag =~ m/^start_(.*)$/) {
-			return _start_tag($1, $attrs);
+			return _start_tag($1, $attrs)."\n";
 		}
 		else {	
 	    return _xml_from($tag,$attrs,@_);
@@ -212,6 +222,16 @@ sub _start_tag {
 		return "<$tag $attr>"
 	} else {
 		return "<$tag>"
+	}
+}
+
+sub _empty_tag {
+	my ($tag,$attr) = @_;
+	$attr = join(" ",map { "$_=\"$attr->{$_}\""} keys %$attr);
+	if ($attr) {
+		return "<$tag $attr/>"
+	} else {
+		return "<$tag/>"
 	}
 }
 

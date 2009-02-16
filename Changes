@@ -1,5 +1,9 @@
 Revision history for XML-Writer-Simple
 
+0.04	2009, 16 February
+		- Added newlines at the end of start_tag and end_tag.
+		- Require a recent perl version (5.8.3 or higher);
+
 0.03    2009, 9 February
 		- Added support to partial tags construction.
 
