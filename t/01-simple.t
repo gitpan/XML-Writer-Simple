@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 
-use Test::More tests => 10;
+use Test::More tests => 11;
 use XML::Writer::Simple tags => [qw/a b c d e/];
 
 like(xml_header, qr/^<\?xml version="1\.0"\?>\n$/);
@@ -22,6 +22,8 @@ is(a({-foo=>'bar'},'x'), "<a foo=\"bar\">x</a>");
 is(a({foo=>'bar'},'x'), "<a foo=\"bar\">x</a>");
 
 is(a(), "<a/>");
+
+is(a(0), "<a>0</a>");
 
 
 

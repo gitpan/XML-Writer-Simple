@@ -13,7 +13,7 @@ XML::Writer::Simple - Create XML files easily!
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 @ISA = qw/Exporter/;
 @EXPORT = (qw/powertag xml_header/);
 our %PTAGS = ();
@@ -160,7 +160,7 @@ sub _clean_attrs {
 
 sub _toxml {
 	my ($tag,$attr,$contents) = @_;
-	if ($contents) {
+	if (defined($contents) && $contents ne "") {
 		return _start_tag($tag,$attr) . $contents . _close_tag($tag);		
 	}
 	else {
