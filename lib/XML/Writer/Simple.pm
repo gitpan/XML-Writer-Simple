@@ -13,18 +13,29 @@ XML::Writer::Simple - Create XML files easily!
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 @ISA = qw/Exporter/;
 @EXPORT = (qw/powertag xml_header/);
 our %PTAGS = ();
 our $MODULENAME = "XML::Writer::Simple";
 
+our $IS_HTML = 0;
+our %TAG_SET = (
+                html => {
+                         tags => [qw.html head body script meta a p i u b Tr td table th div span.]
+                        },
+               );
+
 =head1 SYNOPSIS
 
     use XML::Writer::Simple dtd => "file.dtd";
 
-		print xml_header(encoding => 'iso-8859-1');
+    print xml_header(encoding => 'iso-8859-1');
     print para("foo",b("bar"),"zbr");
+
+
+    # if you want CGI but you do not want CGI :)
+    use XML::Writer::Simple ':html';
 
 =head1 USAGE
 
@@ -75,6 +86,11 @@ construction. For instance:
   print end_foo;
 
 =back
+
+You can also use tagsets, where sets of tags from a well known format
+are imported. For example, to use HTML:
+
+   use XML::Writer::Simple ':html';
 
 =head1 EXPORT
 
@@ -188,35 +204,36 @@ sub _go_down {
 }
 
 sub AUTOLOAD {
-  my $attrs = {};
-  my $tag = our $AUTOLOAD;
+    my $attrs = {};
+    my $tag = our $AUTOLOAD;
 
-  $tag =~ s!${MODULENAME}::!!;
+    $tag =~ s!${MODULENAME}::!!;
 
-  $attrs = shift if ref($_[0]) eq "HASH";
-  $attrs = _clean_attrs($attrs);
+    $attrs = shift if ref($_[0]) eq "HASH";
+    $attrs = _clean_attrs($attrs);
 
-  if (exists($PTAGS{$tag})) {
-    my @tags = @{$PTAGS{$tag}};
-    my $toptag = shift @tags;
-    return _xml_from($toptag, $attrs,
-                     _go_down(\@tags, @_));
-  }
-	else {
-		if ($tag =~ m/^end_(.*)$/) {
-			return _close_tag($1)."\n";
-		}
-		elsif ($tag =~ m/^start_(.*)$/) {
-			return _start_tag($1, $attrs)."\n";
-		}
-		else {	
+    if (exists($PTAGS{$tag})) {
+        my @tags = @{$PTAGS{$tag}};
+        my $toptag = shift @tags;
+        return _xml_from($toptag, $attrs,
+                         _go_down(\@tags, @_));
+    }
+    else {
+        if ($tag =~ m/^end_(.*)$/) {
+            return _close_tag($1)."\n";
+        }
+        elsif ($tag =~ m/^start_(.*)$/) {
+            return _start_tag($1, $attrs)."\n";
+        }
+        else {	
 	    return _xml_from($tag,$attrs,@_);
-		}
-  }
+        }
+    }
 }
 
 sub _start_tag {
 	my ($tag,$attr) = @_;
+        $tag = "tr" if $tag eq "Tr" && $IS_HTML;
 	$attr = join(" ",map { "$_=\"$attr->{$_}\""} keys %$attr);
 	if ($attr) {
 		return "<$tag $attr>"
@@ -227,6 +244,7 @@ sub _start_tag {
 
 sub _empty_tag {
 	my ($tag,$attr) = @_;
+        $tag = "tr" if $tag eq "Tr" && $IS_HTML;
 	$attr = join(" ",map { "$_=\"$attr->{$_}\""} keys %$attr);
 	if ($attr) {
 		return "<$tag $attr/>"
@@ -237,55 +255,63 @@ sub _empty_tag {
 
 sub _close_tag {
 	my $tag = shift;
+        $tag = "tr" if $tag eq "Tr" && $IS_HTML;
 	return "</$tag>";
 }
 
+
 sub import {
-  my $class = shift;
-  my %opts  = @_;
+    my $class = shift;
 
-	my $partial = 0;
-	$partial = 1 if exists $opts{partial};
-
-  if (exists($opts{tags})) {
-    if (ref($opts{tags}) eq "ARRAY") {
-      push @EXPORT, @{$opts{tags}};
-			if ($partial) {
-				push @EXPORT, map { "start_$_" } @{$opts{tags}};
-				push @EXPORT, map { "end_$_"   } @{$opts{tags}};
-			}
+    my @tags;
+    my @ptags;
+    while ($_[0] && $_[0] =~ m!^:(.*)$!) {
+        shift;
+        my $pack = $1;
+        $IS_HTML = 1 if $pack eq "html";
+        if (exists($TAG_SET{$pack})) {
+            push @tags  => exists $TAG_SET{$pack}{tags}  ? @{$TAG_SET{$pack}{tags}}  : ();
+            push @ptags => exists $TAG_SET{$pack}{ptags} ? @{$TAG_SET{$pack}{ptags}} : ();
+        } else {
+            die "XML::Writer::Simple - Unknown tagset :$pack\n";
+        }
     }
-  }
 
-  if (exists($opts{xml})) {
-    my @xmls = (ref($opts{xml}) eq "ARRAY")?@{$opts{xml}}:($opts{xml});
-    my $tags;
-    for my $xml (@xmls) {
-      dt($xml, -default => sub { $tags->{$q}++ });
+    my %opts  = @_;
+
+    if (exists($opts{tags})) {
+        if (ref($opts{tags}) eq "ARRAY") {
+            push @tags   => @{$opts{tags}};
+        }
     }
-    push @EXPORT, keys %$tags;
-		if ($partial) {
-			push @EXPORT, map { "start_$_" } keys %$tags;
-			push @EXPORT, map { "end_$_"   } keys %$tags;
-		}
-  }
 
-  if (exists($opts{dtd})) {
-    my $DTD = ParseDTDFile($opts{dtd});
-    push @EXPORT, keys %$DTD;
-		if ($partial) {
-			push @EXPORT, map { "start_$_" } keys %$DTD;
-			push @EXPORT, map { "end_$_"   } keys %$DTD;
-		}
-  }
+    if (exists($opts{xml})) {
+        my @xmls = (ref($opts{xml}) eq "ARRAY")?@{$opts{xml}}:($opts{xml});
+        my $tags;
+        for my $xml (@xmls) {
+            dt($xml, -default => sub { $tags->{$q}++ });
+        }
+        push @tags   => keys %$tags;
+    }
 
-  if (exists($opts{powertags})) {
-    my @ptags = @{$opts{powertags}};
-    @PTAGS{@ptags} = map { [split/_/] } @ptags;
-    push @EXPORT, @ptags;
-  }
+    if (exists($opts{dtd})) {
+        my $DTD = ParseDTDFile($opts{dtd});
+        push @tags   => keys %$DTD;
+    }
 
-  XML::Writer::Simple->export_to_level(1, $class, @EXPORT);
+    push @EXPORT => @tags;
+    if (exists($opts{partial})) {
+        push @EXPORT => map { "start_$_" } @tags;
+        push @EXPORT => map { "end_$_"   } @tags;
+    }
+
+    if (@ptags || exists($opts{powertags})) {
+        push @ptags => @{$opts{powertags}} if exists $opts{powertags};
+        @PTAGS{@ptags} = map { [split/_/] } @ptags;
+        push @EXPORT => @ptags;
+    }
+
+    XML::Writer::Simple->export_to_level(1, $class, @EXPORT);
 }
 
 =head1 AUTHOR

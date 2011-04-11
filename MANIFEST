@@ -12,5 +12,6 @@ t/03-xml.t
 t/03-xml.xml
 t/04-power.t
 t/05-partial.t
+t/06-html.t
 t/pod-coverage.t
 t/pod.t
