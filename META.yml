@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               XML-Writer-Simple
-version:            0.06
+version:            0.07
 abstract:           Create XML files easily!
 author:
     - Alberto Simoes <ambs@cpan.org>
