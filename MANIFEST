@@ -15,3 +15,4 @@ t/05-partial.t
 t/06-html.t
 t/pod-coverage.t
 t/pod.t
+META.json                                Module JSON meta-data (added by MakeMaker)

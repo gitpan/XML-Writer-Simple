@@ -7,13 +7,15 @@ use vars qw/@ISA @EXPORT/;
 use XML::DT;
 use XML::DTDParser qw/ParseDTDFile/;
 
+=encoding utf-8
+
 =head1 NAME
 
 XML::Writer::Simple - Create XML files easily!
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 @ISA = qw/Exporter/;
 @EXPORT = (qw/powertag xml_header/);
 our %PTAGS = ();
@@ -333,7 +335,7 @@ sub import {
 
 =head1 AUTHOR
 
-Alberto Simoes, C<< <ambs@cpan.org> >>
+Alberto Simões, C<< <ambs@cpan.org> >>
 
 =head1 BUGS
 
@@ -343,14 +345,12 @@ L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=XML-Writer-Simple>.
 I will be notified, and then you'll automatically be notified of progress on
 your bug as I make changes.
 
-=head1 ACKNOWLEDGEMENTS
+=head1 COPYRIGHT AND LICENSE
 
-=head1 COPYRIGHT & LICENSE
+Copyright 1999-2012 Project Natura.
 
-Copyright 2006 Alberto Simoes, all rights reserved.
-
-This program is free software; you can redistribute it and/or modify it
-under the same terms as Perl itself.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
 

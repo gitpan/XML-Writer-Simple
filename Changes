@@ -1,5 +1,8 @@
 Revision history for XML-Writer-Simple
 
+0.08    2012, 5 June
+        - POD fixes
+
 0.07    2011, 11 April
         - Added the ':html' tagset (full set XHTML 1.1)
 
