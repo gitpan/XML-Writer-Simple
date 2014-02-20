@@ -15,9 +15,9 @@ XML::Writer::Simple - Create XML files easily!
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 @ISA = qw/Exporter/;
-@EXPORT = (qw/powertag xml_header/);
+@EXPORT = (qw/powertag xml_header quote_entities/);
 our %PTAGS = ();
 our $MODULENAME = "XML::Writer::Simple";
 
@@ -159,6 +159,13 @@ Powertags support three level tags as well:
 
   print table_tr_td(['a','b','c'],['d','e','f']);
 
+=head2 quote_entities
+
+To use the special characters C<< < >>, C<< > >> and C<< & >> on your PCDATA content you need
+to protect them. You can either do that yourself or call this function.
+
+   print f(quote_entities("a < b"));
+
 =cut
 
 sub xml_header {
@@ -250,10 +257,30 @@ sub AUTOLOAD {
     }
 }
 
+sub quote_entities {
+	my $s = shift;
+	$s =~ s/&/&amp;/g;
+	$s =~ s/</&lt;/g;
+    $s =~ s/>/&gt;/g;
+	return $s;
+}
+
+sub _quote_attr {
+	my $s = shift;
+	$s =~ s/&/&amp;/g;
+	$s =~ s/"/&quot;/g;
+	return $s;
+}
+
+sub _attributes {
+	my $attr = shift;
+	return join(" ", map { "$_=\"" . _quote_attr($attr->{$_}) . "\""} keys %$attr);
+}
+
 sub _start_tag {
-	my ($tag,$attr) = @_;
-        $tag = "tr" if $tag eq "Tr" && $IS_HTML;
-	$attr = join(" ",map { "$_=\"$attr->{$_}\""} keys %$attr);
+	my ($tag, $attr) = @_;
+    $tag = "tr" if $tag eq "Tr" && $IS_HTML;
+	$attr = _attributes($attr);
 	if ($attr) {
 		return "<$tag $attr>"
 	} else {
@@ -262,9 +289,9 @@ sub _start_tag {
 }
 
 sub _empty_tag {
-	my ($tag,$attr) = @_;
-        $tag = "tr" if $tag eq "Tr" && $IS_HTML;
-	$attr = join(" ",map { "$_=\"$attr->{$_}\""} keys %$attr);
+	my ($tag, $attr) = @_;
+    $tag = "tr" if $tag eq "Tr" && $IS_HTML;
+	$attr = _attributes($attr);
 	if ($attr) {
 		return "<$tag $attr/>"
 	} else {
@@ -274,7 +301,7 @@ sub _empty_tag {
 
 sub _close_tag {
 	my $tag = shift;
-        $tag = "tr" if $tag eq "Tr" && $IS_HTML;
+    $tag = "tr" if $tag eq "Tr" && $IS_HTML;
 	return "</$tag>";
 }
 

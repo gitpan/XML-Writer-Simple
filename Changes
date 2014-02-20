@@ -1,5 +1,9 @@
 Revision history for XML-Writer-Simple
 
+0.09    2014, 20 February
+        - Add the protect_entities function;
+        - Quote automatically quotes inside attributes;
+
 0.08    2012, 5 June
         - POD fixes
 
