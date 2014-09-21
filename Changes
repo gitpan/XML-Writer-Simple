@@ -1,5 +1,8 @@
 Revision history for XML-Writer-Simple
 
+0.11    2014, 21 September
+        - Removed some extra files;
+
 0.10    2014, 21 September
         - Dzilification;
         - Added metacpan metadata;

@@ -22,4 +22,4 @@ requires:
   warnings: '0'
 resources:
   repository: https://natura.di.uminho.pt/svn/main/xml/XML-Writer-Simple
-version: '0.10'
+version: '0.11'

@@ -2,16 +2,14 @@
 Changes
 LICENSE
 MANIFEST
+MANIFEST.SKIP
 META.json
 META.yml
 Makefile.PL
 README
 dist.ini
 lib/XML/Writer/Simple.pm
-lib/XML/Writer/Simple.pm~
-scripts/_
 scripts/mkxmlwritersimple
-scripts/mkxmlwritersimple~
 t/00-load.t
 t/01-simple.t
 t/02-dtd.dtd
@@ -21,7 +19,6 @@ t/03-xml.xml
 t/04-power.t
 t/05-partial.t
 t/06-html.t
-t/06-html.t~
 xt/release/cpan-changes.t
 xt/release/pod-coverage.t
 xt/release/pod-syntax.t

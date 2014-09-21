@@ -1,9 +1,0 @@
-#!/usr/bin/perl
-use utf8;
-use strict;
-use warnings;
-use XML::Writer::Simple tags => [qw/author availability biblFull classCode date extent fileDesc funder idno langUsage language note notesStmt profileDesc pubPlace publicationStmt publisher sourceDesc sponsor teiHeader textClass title titleStmt/];
-
-binmode(STDOUT, ":utf8");
-print xml_header(encoding => 'UTF-8');
-print "<TEI.2>",teiHeader({'id'=>"..."},fileDesc(titleStmt(title("...: edição electrónica"),author("..."),sponsor("CEHUM/CCTC"),funder("FCT/FEDER")),extent("... words"),publicationStmt(publisher("Per-Fide Project"),availability("...")),notesStmt(note("...")),sourceDesc(biblFull(titleStmt(title("..."),title({'type'=>"original"},"..."),author("...")),publicationStmt(publisher("..."),pubPlace("..."),idno({'type'=>"ISBN"},"..."),idno({'type'=>"ISSN"},"..."),date("...")),notesStmt(note({'resp'=>"translation"},"..."))))),profileDesc(langUsage(language({'id'=>"..."},"...")),textClass(classCode("...")))),"</TEI.2>";
