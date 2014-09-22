@@ -1,5 +1,8 @@
 Revision history for XML-Writer-Simple
 
+0.12    2014, 22 September
+        - Fixed version issue;
+
 0.11    2014, 21 September
         - Removed some extra files;
 

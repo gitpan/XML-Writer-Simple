@@ -1,5 +1,5 @@
 package XML::Writer::Simple;
-
+$XML::Writer::Simple::VERSION = '0.12';
 use warnings;
 use strict;
 use Exporter ();
@@ -15,7 +15,6 @@ XML::Writer::Simple - Create XML files easily!
 
 =cut
 
-our $VERSION = '0.09';
 @ISA = qw/Exporter/;
 @EXPORT = (qw/powertag xml_header quote_entities/);
 our %PTAGS = ();
